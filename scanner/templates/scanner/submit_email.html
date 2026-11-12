@@ -1,0 +1,134 @@
+{% extends "scanner/base.html" %}
+
+{% block page_title %}Forward & Ingest Suspicious Email{% endblock %}
+{% block page_subtitle %}Submit a reported email, raw .eml file, or CSV batch to the Celery TF-IDF + LinearSVC scanner{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header">
+    <h2 class="card-title">1-Click SOC Demo Presets</h2>
+    <span style="font-size:12.5px; color:var(--text-subtle);">Load realistic test emails instantly</span>
+  </div>
+  <div class="card-body">
+    <div class="preset-grid">
+      {% for preset in presets %}
+        <button type="button" class="preset-btn" onclick="loadPreset('{{ preset.id }}')">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong style="font-size:13px;">{{ preset.name }}</strong>
+            <span class="badge {% if preset.badge == 'Phishing' %}badge-phishing{% elif preset.badge == 'Spam' %}badge-spam{% else %}badge-safe{% endif %}">{{ preset.badge }}</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-subtle);">{{ preset.sender|truncatechars:42 }}</div>
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="tabs">
+    <button type="button" class="tab-btn active" onclick="switchTab('manual', this)">Manual / Forwarded Form</button>
+    <button type="button" class="tab-btn" onclick="switchTab('raw_eml', this)">Raw Email / .eml Upload</button>
+    <button type="button" class="tab-btn" onclick="switchTab('bulk_csv', this)">Bulk CSV Batch Scan</button>
+  </div>
+
+  <div id="tab-manual" class="tab-panel active card-body">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="mode" value="manual" />
+
+      <div class="grid-equal" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label" for="id_sender">From / Sender Header *</label>
+          <input id="id_sender" name="sender" type="text" class="input" required placeholder="e.g. Microsoft Security <security@micr0soft-verify-login.xyz>" />
+          <div class="form-hint">Include display name + address to trigger sender domain mismatch inspection.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="id_reported_by">Reported By (Employee Email)</label>
+          <input id="id_reported_by" name="reported_by" type="email" class="input" value="priya.nair@acme-corp.com" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_subject">Email Subject *</label>
+        <input id="id_subject" name="subject" type="text" class="input" required placeholder="e.g. URGENT: Unusual sign-in activity detected on your Microsoft 365 account" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_body">Email Body & Links *</label>
+        <textarea id="id_body" name="body" rows="7" class="textarea" required placeholder="Paste the suspicious email content and any URLs here..."></textarea>
+      </div>
+
+      <div class="grid-equal" style="margin-bottom:16px;">
+        <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-bottom:0;">
+          <input id="id_contains_attachment" name="contains_attachment" type="checkbox" style="width:17px; height:17px;" />
+          <label for="id_contains_attachment" style="font-size:13.5px; font-weight:600; cursor:pointer;">Email contains attachment (e.g. .html, .zip, .xlsm, .pdf)</label>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <input id="id_attachment_name" name="attachment_name" type="text" class="input" placeholder="Optional attachment filename (e.g. Invoice_9021.xlsm)" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Run Celery Threat Scan & Explainable NLP</button>
+    </form>
+  </div>
+
+  <div id="tab-raw_eml" class="tab-panel card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="mode" value="raw_eml" />
+      <div class="grid-equal" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label">Upload .eml File</label>
+          <input type="file" name="eml_file" accept=".eml,.txt" class="input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reported By</label>
+          <input type="email" name="reported_by" value="soc-intake@acme-corp.com" class="input" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Or Paste Raw RFC-822 Email Source (Headers + Body)</label>
+        <textarea name="raw_eml" rows="9" class="textarea mono" placeholder="From: IT Helpdesk <support@it-portal-update.tk>&#10;Reply-To: hacker@mail-harvest.ru&#10;Subject: Action Required: VPN Password Expires Today&#10;&#10;Please verify at http://185.220.101.44/vpn-reset"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Parse .eml & Scan</button>
+    </form>
+  </div>
+
+  <div id="tab-bulk_csv" class="tab-panel card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="mode" value="bulk_csv" />
+      <div class="form-group">
+        <label class="form-label">Upload CSV File (up to 50 rows per batch)</label>
+        <input type="file" name="csv_file" accept=".csv" class="input" required />
+        <div class="form-hint">Required columns: <span class="mono">sender, subject, body</span> (optional: <span class="mono">contains_attachment</span>). Compatible with <span class="mono">data/emails.csv</span>.</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Queue Batch Scan via Celery</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const PRESETS = {{ presets_json|safe }};
+
+  function loadPreset(presetId) {
+    const p = PRESETS.find(item => item.id === presetId);
+    if (!p) return;
+    switchTab("manual", document.querySelector(".tab-btn"));
+    document.getElementById("id_sender").value = p.sender;
+    document.getElementById("id_reported_by").value = p.reported_by;
+    document.getElementById("id_subject").value = p.subject;
+    document.getElementById("id_body").value = p.body;
+    document.getElementById("id_contains_attachment").checked = Boolean(p.contains_attachment);
+  }
+
+  function switchTab(tabName, btnEl) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    if (btnEl) btnEl.classList.add("active");
+    document.getElementById("tab-" + tabName).classList.add("active");
+  }
+</script>
+{% endblock %}

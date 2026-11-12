@@ -1,0 +1,210 @@
+{% extends "scanner/base.html" %}
+
+{% block page_title %}{{ report.ticket_id }} — Explainable Threat Investigation{% endblock %}
+{% block page_subtitle %}White-box LinearSVC token attribution, URL risk inspection & quarantine controls{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:20px; border-left:5px solid {% if report.predicted_label == 'Phishing' %}#dc2626{% elif report.predicted_label == 'Spam' %}#d97706{% else %}#059669{% endif %};">
+  <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:18px;">
+    <div>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+        <span class="mono" style="font-weight:700; color:var(--text-subtle);">{{ report.ticket_id }}</span>
+        {% if report.predicted_label == 'Phishing' %}
+          <span class="badge badge-phishing" style="font-size:13px;">VERDICT: PHISHING</span>
+        {% elif report.predicted_label == 'Spam' %}
+          <span class="badge badge-spam" style="font-size:13px;">VERDICT: SPAM</span>
+        {% else %}
+          <span class="badge badge-safe" style="font-size:13px;">VERDICT: SAFE</span>
+        {% endif %}
+
+        {% if report.quarantine_status == 'QUARANTINED' %}
+          <span class="badge badge-quarantined">AUTO-QUARANTINED</span>
+        {% elif report.quarantine_status == 'CONFIRMED_THREAT' %}
+          <span class="badge badge-confirmed">CONFIRMED THREAT</span>
+        {% elif report.quarantine_status == 'RELEASED' %}
+          <span class="badge badge-released">RELEASED BY ANALYST</span>
+        {% endif %}
+      </div>
+      <h2 style="margin:0 0 6px; font-size:19px;">{{ report.subject }}</h2>
+      <div style="font-size:13px; color:var(--text-muted);">
+        Reported by <strong>{{ report.reported_by }}</strong> &bull;
+        Celery Task <span class="mono">{{ report.celery_task_id|default:"eager"|truncatechars:18 }}</span> &bull;
+        Scanned {{ report.scanned_at|date:"M d, Y H:i" }} UTC
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:20px;">
+      <div style="text-align:center;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-subtle);">Risk Score</div>
+        <div style="font-size:32px; font-weight:800; line-height:1.1; color:{% if report.risk_score >= 65 %}#dc2626{% elif report.risk_score >= 35 %}#d97706{% else %}#059669{% endif %};">
+          {{ report.risk_score }}<span style="font-size:14px; font-weight:600; color:var(--text-subtle);">/100</span>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-subtle);">Confidence</div>
+        <div style="font-size:32px; font-weight:800; line-height:1.1; color:var(--text);">
+          {{ report.confidence_score }}<span style="font-size:14px; font-weight:600; color:var(--text-subtle);">%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- LEFT: Explainable NLP Email Inspector -->
+  <div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h2 class="card-title">Explainable NLP Highlighted Email</h2>
+        <span class="badge badge-neutral">Hover highlighted tokens for weights</span>
+      </div>
+      <div class="card-body">
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-swatch" style="background:#fee2e2; border:1px solid #dc2626;"></span> Malicious URL</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#f3e8ff; border:1px solid #9333ea;"></span> Domain Spoof</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#ffe4e6; border:1px solid #e11d48;"></span> Credential/Financial Bait</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#ffedd5; border:1px solid #ea580c;"></span> LinearSVC Phishing N-gram</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#fef3c7; border:1px solid #d97706;"></span> Urgency Cue</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#dcfce7; border:1px solid #16a34a;"></span> Safe Signal</span>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; color:var(--text-subtle); margin-bottom:5px;">From / Sender</div>
+          <div class="explain-box" style="padding:10px 14px; font-size:13.5px;">{% for seg in explain.sender_segments %}{% if seg.highlight %}<span class="hl-token hl-{{ seg.category }}" title="{{ seg.reason }}">{{ seg.text }}</span>{% else %}{{ seg.text }}{% endif %}{% empty %}{{ report.sender }}{% endfor %}</div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; color:var(--text-subtle); margin-bottom:5px;">Subject</div>
+          <div class="explain-box" style="padding:10px 14px; font-weight:600;">{% for seg in explain.subject_segments %}{% if seg.highlight %}<span class="hl-token hl-{{ seg.category }}" title="{{ seg.reason }}">{{ seg.text }}</span>{% else %}{{ seg.text }}{% endif %}{% empty %}{{ report.subject }}{% endfor %}</div>
+        </div>
+
+        <div>
+          <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; color:var(--text-subtle); margin-bottom:5px;">Email Body</div>
+          <div class="explain-box">{% for seg in explain.body_segments %}{% if seg.highlight %}<span class="hl-token hl-{{ seg.category }}" title="{{ seg.reason }}">{{ seg.text }}</span>{% else %}{{ seg.text }}{% endif %}{% empty %}{{ report.body }}{% endfor %}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Extracted URLs & Domain Inspection ({{ features.url_count|default:0 }})</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Extracted URL</th>
+              <th>Host & Flags</th>
+              <th>Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in features.urls %}
+              <tr>
+                <td class="mono" style="font-size:12.5px; max-width:260px; word-break:break-all;">{{ u.url }}</td>
+                <td>
+                  <div style="font-weight:600; font-size:12.5px;">{{ u.host }}</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:4px;">
+                    {% for flag in u.flags %}
+                      <span class="badge {% if u.is_malicious %}badge-phishing{% else %}badge-neutral{% endif %}" style="font-size:11px;">{{ flag }}</span>
+                    {% empty %}
+                      <span class="badge badge-safe" style="font-size:11px;">No URL anomalies</span>
+                    {% endfor %}
+                  </div>
+                </td>
+                <td>
+                  <strong style="color:{% if u.risk_score >= 35 %}#dc2626{% else %}#059669{% endif %};">{{ u.risk_score }}/100</strong>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3" style="text-align:center; color:var(--text-subtle); padding:20px;">No external URLs detected in this message.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Classification Probabilities, Triggers & SOC Actions -->
+  <div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h2 class="card-title">Classification Probabilities & Summary</h2>
+      </div>
+      <div class="card-body">
+        <div class="prob-row">
+          <div class="prob-head"><span>Phishing</span><span>{{ report.class_probabilities.Phishing|default:0 }}%</span></div>
+          <div class="prob-track"><div class="prob-fill" style="width:{{ report.class_probabilities.Phishing|default:0 }}%; background:#dc2626;"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-head"><span>Spam</span><span>{{ report.class_probabilities.Spam|default:0 }}%</span></div>
+          <div class="prob-track"><div class="prob-fill" style="width:{{ report.class_probabilities.Spam|default:0 }}%; background:#d97706;"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-head"><span>Safe</span><span>{{ report.class_probabilities.Safe|default:0 }}%</span></div>
+          <div class="prob-track"><div class="prob-fill" style="width:{{ report.class_probabilities.Safe|default:0 }}%; background:#059669;"></div></div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+
+        <div style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--text-subtle); margin-bottom:8px;">Why This Verdict Was Triggered</div>
+        <ul style="margin:0; padding-left:18px; font-size:13.5px; color:var(--text);">
+          {% for reason in explain.summary_reasons %}
+            <li style="margin-bottom:6px;">{{ reason }}</li>
+          {% empty %}
+            <li>Based on TF-IDF token profile and domain metadata.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h2 class="card-title">Top LinearSVC Token Weights</h2>
+      </div>
+      <div class="card-body">
+        {% if explain.top_target_tokens %}
+          {% for tok in explain.top_target_tokens|slice:":8" %}
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:6px 0; border-bottom:1px solid var(--border);">
+              <span class="mono" style="font-weight:600;">"{{ tok.term }}"</span>
+              <span class="badge {% if report.predicted_label == 'Phishing' %}badge-phishing{% elif report.predicted_label == 'Spam' %}badge-spam{% else %}badge-safe{% endif %}">
+                +{{ tok.weight|floatformat:3 }}
+              </span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div style="font-size:13px; color:var(--text-subtle);">Dominated by structural domain/URL signals.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">SOC Analyst Disposition</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'scanner:email_action' report.pk %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label" for="id_notes">Investigation Notes</label>
+            <textarea id="id_notes" name="analyst_notes" rows="3" class="textarea" placeholder="Add SOC triage notes, IOC blocklist refs, or user callback status...">{{ report.analyst_notes }}</textarea>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="submit" name="action" value="confirm_threat" class="btn btn-danger btn-sm">Confirm Threat & Keep Quarantined</button>
+            <button type="submit" name="action" value="release" class="btn btn-success btn-sm">Release to Inbox (Safe)</button>
+            <button type="submit" name="action" value="rescan" class="btn btn-secondary btn-sm">Re-Scan</button>
+            <button type="submit" name="action" value="save_notes" class="btn btn-secondary btn-sm">Save Notes</button>
+          </div>
+        </form>
+        {% if report.reviewed_at %}
+          <div style="margin-top:12px; font-size:12px; color:var(--text-subtle);">
+            Last reviewed by <strong>{{ report.reviewed_by }}</strong> on {{ report.reviewed_at|date:"M d, Y H:i" }} UTC
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

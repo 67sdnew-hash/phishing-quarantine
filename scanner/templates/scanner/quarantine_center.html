@@ -1,0 +1,119 @@
+{% extends "scanner/base.html" %}
+
+{% block page_title %}Quarantine Vault & Simulated SOC Alerts{% endblock %}
+{% block page_subtitle %}Manage high-risk quarantined messages and simulated Exchange / Slack SOC alert dispatches{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h2 class="card-title">Simulated Quarantine Alerts Feed</h2>
+    <form method="get" style="display:flex; gap:8px; align-items:center;">
+      <select name="severity" class="select" style="padding:6px 10px;">
+        <option value="all" {% if severity_filter == 'all' %}selected{% endif %}>All Severities</option>
+        <option value="CRITICAL" {% if severity_filter == 'CRITICAL' %}selected{% endif %}>Critical</option>
+        <option value="HIGH" {% if severity_filter == 'HIGH' %}selected{% endif %}>High</option>
+        <option value="MEDIUM" {% if severity_filter == 'MEDIUM' %}selected{% endif %}>Medium</option>
+      </select>
+      <select name="ack" class="select" style="padding:6px 10px;">
+        <option value="all" {% if ack_filter == 'all' %}selected{% endif %}>All States</option>
+        <option value="unack" {% if ack_filter == 'unack' %}selected{% endif %}>Unacknowledged</option>
+        <option value="ack" {% if ack_filter == 'ack' %}selected{% endif %}>Acknowledged</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+  </div>
+  <div class="card-body">
+    {% for alert in alerts %}
+      <div class="alert-item {% if alert.is_acknowledged %}ack{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+              <span class="badge {% if alert.severity == 'CRITICAL' %}badge-critical{% elif alert.severity == 'HIGH' %}badge-high{% else %}badge-medium{% endif %}">
+                {{ alert.severity }}
+              </span>
+              <span class="badge badge-neutral">{{ alert.get_alert_type_display }}</span>
+              <strong>{{ alert.title }}</strong>
+            </div>
+            <div style="font-size:13.5px; margin-bottom:8px;">{{ alert.message }}</div>
+            {% if alert.triggered_rules %}
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+                {% for rule in alert.triggered_rules %}
+                  <span class="badge badge-neutral" style="font-size:11.5px;">{{ rule|truncatechars:85 }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div style="font-size:12px; color:var(--text-subtle);">
+              Simulated Dispatch: <strong>{{ alert.simulated_dispatch_channel }}</strong> &bull; {{ alert.created_at|date:"M d, Y H:i" }} UTC
+              {% if alert.is_acknowledged %}
+                &bull; Acknowledged by {{ alert.acknowledged_by }}
+              {% endif %}
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <a href="{% url 'scanner:email_detail' alert.email_report.pk %}" class="btn btn-secondary btn-sm">Inspect Email</a>
+            {% if not alert.is_acknowledged %}
+              <form method="post" action="{% url 'scanner:acknowledge_alert' alert.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="/quarantine/" />
+                <button type="submit" class="btn btn-primary btn-sm">Acknowledge</button>
+              </form>
+            {% else %}
+              <span class="badge badge-released">Acknowledged</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div style="text-align:center; padding:24px; color:var(--text-subtle);">No alerts match this filter.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Quarantined Emails Vault ({{ quarantined_emails|length }})</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket</th>
+          <th>Subject</th>
+          <th>Sender</th>
+          <th>Risk</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in quarantined_emails %}
+          <tr>
+            <td class="mono" style="font-weight:700;">{{ report.ticket_id }}</td>
+            <td><a href="{% url 'scanner:email_detail' report.pk %}" style="font-weight:600; color:var(--text);">{{ report.subject|truncatechars:65 }}</a></td>
+            <td class="mono" style="font-size:12.5px;">{{ report.sender_email|default:report.sender|truncatechars:40 }}</td>
+            <td><strong style="color:#dc2626;">{{ report.risk_score }}/100</strong></td>
+            <td>
+              {% if report.quarantine_status == 'CONFIRMED_THREAT' %}
+                <span class="badge badge-confirmed">Confirmed Threat</span>
+              {% else %}
+                <span class="badge badge-quarantined">Quarantined</span>
+              {% endif %}
+            </td>
+            <td style="display:flex; gap:6px;">
+              <a href="{% url 'scanner:email_detail' report.pk %}" class="btn btn-secondary btn-sm">Explainability</a>
+              <form method="post" action="{% url 'scanner:email_action' report.pk %}">
+                {% csrf_token %}
+                <button type="submit" name="action" value="release" class="btn btn-success btn-sm">Release</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:24px; color:var(--text-subtle);">Quarantine vault is currently empty.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}PhishGuard SOC — Email & URL Quarantine{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'scanner/css/soc.css' %}" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">PhishGuard SOC</div>
+          <div class="brand-sub">Mail Quarantine</div>
+        </div>
+      </div>
+
+      <nav class="nav-section">
+        <div class="nav-label">Operations</div>
+        <a href="{% url 'scanner:dashboard' %}" class="nav-link {% if active_nav == 'dashboard' %}active{% endif %}">
+          <span class="nav-link-left">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            SOC Triage Queue
+          </span>
+        </a>
+        <a href="{% url 'scanner:submit_email' %}" class="nav-link {% if active_nav == 'submit' %}active{% endif %}">
+          <span class="nav-link-left">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            Forward / Ingest Email
+          </span>
+        </a>
+        <a href="{% url 'scanner:quarantine_center' %}" class="nav-link {% if active_nav == 'quarantine' %}active{% endif %}">
+          <span class="nav-link-left">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Quarantine & Alerts
+          </span>
+          {% if stats.unack_alerts %}
+            <span class="nav-badge">{{ stats.unack_alerts }}</span>
+          {% endif %}
+        </a>
+
+        <div class="nav-label" style="margin-top: 10px;">Intelligence</div>
+        <a href="{% url 'scanner:model_lab' %}" class="nav-link {% if active_nav == 'model' %}active{% endif %}">
+          <span class="nav-link-left">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l8-8"/><circle cx="12" cy="12" r="3"/></svg>
+            NLP Model & Explainability
+          </span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div style="font-weight: 600; color: #e2e8f0; margin-bottom: 4px;">
+          <span class="status-dot"></span>LinearSVC Engine Active
+        </div>
+        <div>TF-IDF + Domain/URL Signals</div>
+        <div style="margin-top: 4px; color: #64748b;">Celery Scanner Ready</div>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div>
+          <h1 class="topbar-title">{% block page_title %}Enterprise SOC Triage Dashboard{% endblock %}</h1>
+          <div class="topbar-sub">{% block page_subtitle %}Automated phishing detection, malicious URL extraction & explainable NLP quarantine{% endblock %}</div>
+        </div>
+        <div class="topbar-actions">
+          <a href="{% url 'scanner:quarantine_center' %}" class="btn btn-secondary btn-sm">
+            Alerts ({{ stats.unack_alerts }})
+          </a>
+          <a href="{% url 'scanner:submit_email' %}" class="btn btn-primary btn-sm">
+            + Scan Forwarded Email
+          </a>
+        </div>
+      </header>
+
+      <main class="page-body">
+        {% if messages %}
+          <div class="flash-stack">
+            {% for message in messages %}
+              <div class="flash flash-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
