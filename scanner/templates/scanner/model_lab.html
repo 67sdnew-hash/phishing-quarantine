@@ -5,24 +5,24 @@
 
 {% block content %}
 <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
-  <div class="kpi-card kpi-primary">
+  <div class="kpi-card kpi-primary" style="--stagger:0;">
     <div class="kpi-label">5-Fold CV Accuracy</div>
-    <div class="kpi-value">{{ metrics.cv_accuracy }}%</div>
+    <div class="kpi-value" data-count="{{ metrics.cv_accuracy }}" data-suffix="%">{{ metrics.cv_accuracy }}%</div>
     <div class="kpi-foot">Stratified K-Fold Validation</div>
   </div>
-  <div class="kpi-card kpi-success">
+  <div class="kpi-card kpi-success" style="--stagger:1;">
     <div class="kpi-label">Macro F1 Score</div>
-    <div class="kpi-value">{{ metrics.macro_f1 }}%</div>
+    <div class="kpi-value" data-count="{{ metrics.macro_f1 }}" data-suffix="%">{{ metrics.macro_f1 }}%</div>
     <div class="kpi-foot">Weighted F1: {{ metrics.weighted_f1 }}%</div>
   </div>
-  <div class="kpi-card">
+  <div class="kpi-card" style="--stagger:2;">
     <div class="kpi-label">Training Dataset</div>
-    <div class="kpi-value">{{ metrics.dataset_rows }}</div>
+    <div class="kpi-value" data-count="{{ metrics.dataset_rows }}">{{ metrics.dataset_rows }}</div>
     <div class="kpi-foot">emails.csv labeled samples</div>
   </div>
-  <div class="kpi-card">
+  <div class="kpi-card" style="--stagger:3;">
     <div class="kpi-label">Feature Space</div>
-    <div class="kpi-value">{{ metrics.tfidf_vocab_size }}</div>
+    <div class="kpi-value" data-count="{{ metrics.tfidf_vocab_size }}">{{ metrics.tfidf_vocab_size }}</div>
     <div class="kpi-foot">+ {{ metrics.structured_feature_count }} URL/domain signals</div>
   </div>
 </div>

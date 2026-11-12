@@ -33,17 +33,48 @@
       </div>
     </div>
 
-    <div style="display:flex; align-items:center; gap:20px;">
-      <div style="text-align:center;">
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-subtle);">Risk Score</div>
-        <div style="font-size:32px; font-weight:800; line-height:1.1; color:{% if report.risk_score >= 65 %}#dc2626{% elif report.risk_score >= 35 %}#d97706{% else %}#059669{% endif %};">
-          {{ report.risk_score }}<span style="font-size:14px; font-weight:600; color:var(--text-subtle);">/100</span>
+    <div class="gauge-3d-wrap">
+      <div class="gauge-ring-card" data-tilt data-tilt-max="9">
+        <svg class="gauge-ring-svg" viewBox="0 0 98 98">
+          <circle class="gauge-ring-bg" cx="49" cy="49" r="40"></circle>
+          <circle
+            class="gauge-ring-fill"
+            cx="49"
+            cy="49"
+            r="40"
+            data-gauge-pct="{{ report.risk_score|default:0 }}"
+            stroke="{% if report.risk_score >= 65 %}#dc2626{% elif report.risk_score >= 35 %}#d97706{% else %}#059669{% endif %}"
+            stroke-dasharray="251.33"
+            stroke-dashoffset="251.33"
+          ></circle>
+        </svg>
+        <div class="gauge-ring-label">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-subtle);">Risk</div>
+          <div style="font-size:20px; font-weight:800; line-height:1.1; color:{% if report.risk_score >= 65 %}#dc2626{% elif report.risk_score >= 35 %}#d97706{% else %}#059669{% endif %};">
+            {{ report.risk_score }}
+          </div>
         </div>
       </div>
-      <div style="text-align:center;">
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-subtle);">Confidence</div>
-        <div style="font-size:32px; font-weight:800; line-height:1.1; color:var(--text);">
-          {{ report.confidence_score }}<span style="font-size:14px; font-weight:600; color:var(--text-subtle);">%</span>
+
+      <div class="gauge-ring-card" data-tilt data-tilt-max="9">
+        <svg class="gauge-ring-svg" viewBox="0 0 98 98">
+          <circle class="gauge-ring-bg" cx="49" cy="49" r="40"></circle>
+          <circle
+            class="gauge-ring-fill"
+            cx="49"
+            cy="49"
+            r="40"
+            data-gauge-pct="{{ report.confidence_score|default:0 }}"
+            stroke="#2563eb"
+            stroke-dasharray="251.33"
+            stroke-dashoffset="251.33"
+          ></circle>
+        </svg>
+        <div class="gauge-ring-label">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-subtle);">Conf.</div>
+          <div style="font-size:20px; font-weight:800; line-height:1.1; color:var(--text);">
+            {{ report.confidence_score }}%
+          </div>
         </div>
       </div>
     </div>

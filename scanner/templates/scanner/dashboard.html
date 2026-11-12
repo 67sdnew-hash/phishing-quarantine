@@ -5,29 +5,29 @@
 
 {% block content %}
 <div class="kpi-grid">
-  <div class="kpi-card">
+  <div class="kpi-card" style="--stagger:0;">
     <div class="kpi-label">Total Scanned</div>
-    <div class="kpi-value">{{ stats.total_emails }}</div>
+    <div class="kpi-value" data-count="{{ stats.total_emails }}">{{ stats.total_emails }}</div>
     <div class="kpi-foot">Avg Risk Score: {{ stats.avg_risk }}/100</div>
   </div>
-  <div class="kpi-card kpi-danger">
+  <div class="kpi-card kpi-danger" style="--stagger:1;">
     <div class="kpi-label">Phishing Detected</div>
-    <div class="kpi-value">{{ stats.phishing_count }}</div>
+    <div class="kpi-value" data-count="{{ stats.phishing_count }}">{{ stats.phishing_count }}</div>
     <div class="kpi-foot">{{ pct.phishing }}% of reported mail</div>
   </div>
-  <div class="kpi-card kpi-warning">
+  <div class="kpi-card kpi-warning" style="--stagger:2;">
     <div class="kpi-label">Spam Filtered</div>
-    <div class="kpi-value">{{ stats.spam_count }}</div>
+    <div class="kpi-value" data-count="{{ stats.spam_count }}">{{ stats.spam_count }}</div>
     <div class="kpi-foot">{{ pct.spam }}% promotional/bulk</div>
   </div>
-  <div class="kpi-card kpi-success">
+  <div class="kpi-card kpi-success" style="--stagger:3;">
     <div class="kpi-label">Safe Cleared</div>
-    <div class="kpi-value">{{ stats.safe_count }}</div>
+    <div class="kpi-value" data-count="{{ stats.safe_count }}">{{ stats.safe_count }}</div>
     <div class="kpi-foot">{{ pct.safe }}% verified benign</div>
   </div>
-  <div class="kpi-card kpi-primary">
+  <div class="kpi-card kpi-primary" style="--stagger:4;">
     <div class="kpi-label">Active Quarantined</div>
-    <div class="kpi-value">{{ stats.quarantined_count }}</div>
+    <div class="kpi-value" data-count="{{ stats.quarantined_count }}">{{ stats.quarantined_count }}</div>
     <div class="kpi-foot">{{ stats.unack_alerts }} unacknowledged alerts</div>
   </div>
 </div>
@@ -100,16 +100,16 @@
 
       <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
 
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center;">
-        <div style="background:var(--surface-muted); padding:10px; border-radius:8px; border:1px solid var(--border);">
+      <div class="signal-grid-3d">
+        <div class="signal-tile-3d">
           <div style="font-size:20px; font-weight:800; color:#dc2626;">{{ signal_stats.malicious_urls }}</div>
           <div style="font-size:11.5px; color:var(--text-subtle);">Emails w/ Risky URLs</div>
         </div>
-        <div style="background:var(--surface-muted); padding:10px; border-radius:8px; border:1px solid var(--border);">
+        <div class="signal-tile-3d">
           <div style="font-size:20px; font-weight:800; color:#7c3aed;">{{ signal_stats.domain_mismatch }}</div>
           <div style="font-size:11.5px; color:var(--text-subtle);">Sender Spoof / Mismatch</div>
         </div>
-        <div style="background:var(--surface-muted); padding:10px; border-radius:8px; border:1px solid var(--border);">
+        <div class="signal-tile-3d">
           <div style="font-size:20px; font-weight:800; color:#d97706;">{{ signal_stats.urgency_cues }}</div>
           <div style="font-size:11.5px; color:var(--text-subtle);">Urgency Triggers</div>
         </div>

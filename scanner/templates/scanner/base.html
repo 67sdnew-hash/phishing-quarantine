@@ -8,14 +8,22 @@
   <link rel="stylesheet" href="{% static 'scanner/css/soc.css' %}" />
 </head>
 <body>
+  <div class="ambient-scene" aria-hidden="true">
+    <div class="ambient-grid"></div>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+  </div>
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
   <div class="app-shell">
-    <aside class="sidebar">
+    <aside id="appSidebar" class="sidebar">
       <div class="brand">
-        <div class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <path d="M9 12l2 2 4-4"></path>
-          </svg>
+        <div class="brand-icon-3d">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="M9 12l2 2 4-4"></path>
+            </svg>
+          </div>
         </div>
         <div>
           <div class="brand-title">PhishGuard SOC</div>
@@ -67,9 +75,16 @@
 
     <div class="main-content">
       <header class="topbar">
-        <div>
-          <h1 class="topbar-title">{% block page_title %}Enterprise SOC Triage Dashboard{% endblock %}</h1>
-          <div class="topbar-sub">{% block page_subtitle %}Automated phishing detection, malicious URL extraction & explainable NLP quarantine{% endblock %}</div>
+        <div class="topbar-left">
+          <button type="button" id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 class="topbar-title">{% block page_title %}Enterprise SOC Triage Dashboard{% endblock %}</h1>
+            <div class="topbar-sub">{% block page_subtitle %}Automated phishing detection, malicious URL extraction & explainable NLP quarantine{% endblock %}</div>
+          </div>
         </div>
         <div class="topbar-actions">
           <a href="{% url 'scanner:quarantine_center' %}" class="btn btn-secondary btn-sm">
@@ -94,6 +109,7 @@
       </main>
     </div>
   </div>
+  <script src="{% static 'scanner/js/soc3d.js' %}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
