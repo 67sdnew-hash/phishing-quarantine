@@ -20,11 +20,11 @@
     backdrop.addEventListener("click", () => setSidebarOpen(false));
   }
 
-  // Interactive 3D tilt + specular glare
+  // Interactive 3D tilt + subtle specular glare
   if (!prefersReducedMotion && !isTouchDevice) {
     const tiltTargets = document.querySelectorAll(".kpi-card, .preset-btn, [data-tilt]");
     tiltTargets.forEach((el) => {
-      const maxTilt = parseFloat(el.dataset.tiltMax || "7");
+      const maxTilt = parseFloat(el.dataset.tiltMax || "3.5");
 
       el.addEventListener("mousemove", (e) => {
         const rect = el.getBoundingClientRect();
@@ -38,7 +38,7 @@
 
         el.style.setProperty("--mouse-x", `${(px * 100).toFixed(1)}%`);
         el.style.setProperty("--mouse-y", `${(py * 100).toFixed(1)}%`);
-        el.style.transform = `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px) scale(1.012)`;
+        el.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-2px)`;
       });
 
       el.addEventListener("mouseleave", () => {
@@ -107,12 +107,12 @@
     }
   });
 
-  // Multi-Theme Engine (Obsidian Dark, Platinum Light, Matrix Cyberpunk, Cobalt Sentinel)
+  // Multi-Theme Engine (Obsidian Dark, Opal Light, Midnight Indigo, Emerald Matrix)
   const THEMES = {
     dark: { label: "Obsidian", icon: "🌙" },
-    light: { label: "Platinum", icon: "☀️" },
-    cyberpunk: { label: "Matrix", icon: "⚡" },
-    midnight: { label: "Cobalt", icon: "🌊" }
+    light: { label: "Opal", icon: "☀️" },
+    midnight: { label: "Midnight", icon: "🌌" },
+    cyberpunk: { label: "Emerald", icon: "🌿" }
   };
 
   const themeWrap = document.getElementById("themeDropdownWrap");
