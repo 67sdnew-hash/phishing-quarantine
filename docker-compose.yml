@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: phishguard-web
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=production-secure-compose-secret-key-replace-me
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,web
+      - CELERY_ALWAYS_EAGER=False
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_worker:
+    build: .
+    container_name: phishguard-celery
+    command: celery -A config worker -l info --concurrency=2
+    environment:
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=production-secure-compose-secret-key-replace-me
+      - CELERY_ALWAYS_EAGER=False
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: phishguard-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped

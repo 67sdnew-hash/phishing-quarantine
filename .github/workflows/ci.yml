@@ -1,0 +1,47 @@
+name: PhishGuard CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Build & Run Test Suite
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Django System Check
+        run: |
+          python manage.py check
+
+      - name: Static Assets Verification
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Run Unit Tests
+        env:
+          DJANGO_SECRET_KEY: "ci-secret-key-for-automated-tests"
+          DJANGO_DEBUG: "False"
+          CELERY_ALWAYS_EAGER: "True"
+        run: |
+          python manage.py test scanner --verbosity 2
