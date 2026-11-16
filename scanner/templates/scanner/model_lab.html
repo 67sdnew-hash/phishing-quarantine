@@ -69,7 +69,7 @@
       <h2 class="card-title">5-Fold Out-of-Sample Confusion Matrix</h2>
     </div>
     <div class="table-wrap">
-      <table>
+      <table data-cm-table>
         <thead>
           <tr>
             <th>Actual \ Predicted</th>
@@ -83,7 +83,7 @@
             <tr>
               <td><strong>{{ row.label }}</strong></td>
               {% for cnt in row.counts %}
-                <td class="mono" style="font-weight:700;">{{ cnt }}</td>
+                <td data-cm-cell class="mono tabular" style="font-weight:700;">{{ cnt }}</td>
               {% endfor %}
             </tr>
           {% endfor %}

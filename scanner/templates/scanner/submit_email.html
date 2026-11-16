@@ -79,7 +79,12 @@
       <div class="grid-equal" style="margin-bottom:0;">
         <div class="form-group">
           <label class="form-label">Upload .eml File</label>
-          <input type="file" name="eml_file" accept=".eml,.txt" class="input" />
+          <div class="dropzone-3d">
+            <input type="file" name="eml_file" accept=".eml,.txt" />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="dropzone-title">Drop .eml file here or click to browse</div>
+            <div class="dropzone-sub dropzone-filename">Supports RFC-822 .eml or .txt</div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Reported By</label>
@@ -100,8 +105,13 @@
       <input type="hidden" name="mode" value="bulk_csv" />
       <div class="form-group">
         <label class="form-label">Upload CSV File (up to 50 rows per batch)</label>
-        <input type="file" name="csv_file" accept=".csv" class="input" required />
-        <div class="form-hint">Required columns: <span class="mono">sender, subject, body</span> (optional: <span class="mono">contains_attachment</span>). Compatible with <span class="mono">data/emails.csv</span>.</div>
+        <div class="dropzone-3d">
+          <input type="file" name="csv_file" accept=".csv" required />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <div class="dropzone-title">Drop CSV batch file here or click to browse</div>
+          <div class="dropzone-sub dropzone-filename">Required columns: sender, subject, body</div>
+        </div>
+        <div class="form-hint">Compatible with <span class="mono">data/emails.csv</span> (optional: <span class="mono">contains_attachment</span>).</div>
       </div>
       <button type="submit" class="btn btn-primary">Queue Batch Scan via Celery</button>
     </form>

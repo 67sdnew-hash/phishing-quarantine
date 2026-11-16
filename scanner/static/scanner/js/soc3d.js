@@ -106,4 +106,126 @@
       });
     }
   });
+
+  // Multi-Theme Engine (Obsidian Dark, Platinum Light, Matrix Cyberpunk, Cobalt Sentinel)
+  const THEMES = {
+    dark: { label: "Obsidian", icon: "🌙" },
+    light: { label: "Platinum", icon: "☀️" },
+    cyberpunk: { label: "Matrix", icon: "⚡" },
+    midnight: { label: "Cobalt", icon: "🌊" }
+  };
+
+  const themeWrap = document.getElementById("themeDropdownWrap");
+  const themeMenuBtn = document.getElementById("themeMenuBtn");
+  const themeIconEl = document.getElementById("activeThemeIcon");
+  const themeLabelEl = document.getElementById("activeThemeLabel");
+  const themeItems = document.querySelectorAll("[data-theme-value]");
+
+  function applyTheme(themeKey) {
+    const meta = THEMES[themeKey] || THEMES.dark;
+    const finalKey = THEMES[themeKey] ? themeKey : "dark";
+
+    document.documentElement.setAttribute("data-theme", finalKey);
+    try {
+      localStorage.setItem("phishguard-theme", finalKey);
+    } catch (_) {}
+
+    if (themeIconEl) themeIconEl.textContent = meta.icon;
+    if (themeLabelEl) themeLabelEl.textContent = meta.label;
+
+    themeItems.forEach((btn) => {
+      const isMatch = btn.getAttribute("data-theme-value") === finalKey;
+      btn.classList.toggle("active", isMatch);
+      btn.setAttribute("aria-selected", isMatch ? "true" : "false");
+    });
+  }
+
+  // Initialize active theme
+  const initialTheme = document.documentElement.getAttribute("data-theme") || "dark";
+  applyTheme(initialTheme);
+
+  if (themeMenuBtn && themeWrap) {
+    themeMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = themeWrap.classList.toggle("open");
+      themeMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!themeWrap.contains(e.target)) {
+        themeWrap.classList.remove("open");
+        themeMenuBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && themeWrap.classList.contains("open")) {
+        themeWrap.classList.remove("open");
+        themeMenuBtn.setAttribute("aria-expanded", "false");
+        themeMenuBtn.focus();
+      }
+    });
+  }
+
+  themeItems.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const val = btn.getAttribute("data-theme-value");
+      if (val) {
+        applyTheme(val);
+        if (themeWrap) themeWrap.classList.remove("open");
+        if (themeMenuBtn) themeMenuBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  });
+
+  // "/" keyboard shortcut to focus search bar
+  const searchInput = document.querySelector('.filter-bar input[name="q"]');
+  if (searchInput) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+    });
+  }
+
+  // 3D File Dropzone feedback
+  document.querySelectorAll(".dropzone-3d").forEach((zone) => {
+    const input = zone.querySelector('input[type="file"]');
+    const labelEl = zone.querySelector(".dropzone-filename");
+    if (!input) return;
+
+    const updateName = () => {
+      if (labelEl && input.files && input.files.length > 0) {
+        labelEl.textContent = `Selected: ${input.files[0].name}`;
+      }
+    };
+
+    input.addEventListener("change", updateName);
+    zone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      zone.classList.add("dragover");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+    zone.addEventListener("drop", () => {
+      zone.classList.remove("dragover");
+      setTimeout(updateName, 0);
+    });
+  });
+
+  // Dismissible flash alerts
+  document.querySelectorAll(".flash-close").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const flash = btn.closest(".flash");
+      if (flash) flash.remove();
+    });
+  });
+
+  // Highlight diagonal cells in confusion matrix
+  document.querySelectorAll("table[data-cm-table] tbody tr").forEach((row, rIdx) => {
+    const cells = row.querySelectorAll("td[data-cm-cell]");
+    if (cells[rIdx]) cells[rIdx].classList.add("cm-diag");
+  });
 })();

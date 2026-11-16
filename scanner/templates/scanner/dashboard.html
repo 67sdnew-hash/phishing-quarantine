@@ -130,7 +130,10 @@
   </div>
 
   <form method="get" class="filter-bar">
-    <input type="text" name="q" value="{{ query }}" placeholder="Search subject, sender, reporter..." class="input" />
+    <div class="search-wrap">
+      <input type="text" name="q" value="{{ query }}" placeholder="Search subject, sender, reporter..." class="input" />
+      <span class="kbd-hint">/</span>
+    </div>
     <select name="label" class="select">
       <option value="all" {% if label_filter == 'all' %}selected{% endif %}>All Classifications</option>
       <option value="Phishing" {% if label_filter == 'Phishing' %}selected{% endif %}>Phishing</option>
